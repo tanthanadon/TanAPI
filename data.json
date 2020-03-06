@@ -1,0 +1,22 @@
+[
+    {
+        "city": "Bangkok",
+        "lat": 13.763877,
+        "long": 100.536927
+    },
+    {
+        "city": "Nakhon Ratchasima",
+        "lat": 14.977660,
+        "long": 102.083679
+    },
+    {
+        "city": "Phra Nakhon Si Ayutthaya",
+        "lat": 14.353462,
+        "long": 100.569003
+    },
+    {
+        "city":"Nakhon Pathom",
+        "lat": 13.816927,
+        "long": 100.036881
+    }
+]
