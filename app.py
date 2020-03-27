@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, redirect, url_for
 import os
 import json
 from pathlib import Path
@@ -7,75 +7,99 @@ import pandas as pd
 
 from math import sin, cos, sqrt, atan2, radians
 
-# Thaadwada
-
-"""
-Mefaefaa
-"""
-
-'''
-wadwadawd
-wadad
-'''
-
-'''
-wdawdwadw
-awdawdwadwa
-'''
-#dwadawdawdw
-#dwadadwdw
-
 app = Flask(__name__)
 
-@app.route('/')
-def results():
-    url = "https://www.google.com"
+@app.route('/addCard')
+def add_card():
+    username = request.args.get('username')
+    password = request.args.get('password')
+
+    name = request.args.get('name')
+    status = request.args.get('status')
+    content = request.args.get('content')
+    category = request.args.get('category')
+    author = request.args.get('author')
+
+    user = {"username": username,
+        "password": password}
     
-    return jsonify({"result":  country_list})
+    card = {"card": name, 
+            "status": status, 
+            "content": content,
+            "category": category,
+            "author": author}
 
-@app.route('/AddressLookup')
+    temp = []
+    
+    with open("card.json", mode="a") as f:
+        f.write(json.dumps(card, indent=2))
 
+    return card
 
-def query_example():
-    #if key doesn't exist, returns None
-    lat = request.args.get('lat')
-    long = request.args.get('long')
-    print(type(lat))
-    print(type(long))
-    distance = []
+@app.route('/updateCard')
+def update_card():
+    
+    username = request.args.get('username')
+    password = request.args.get('password')
+
+    name = request.args.get('name')
+    status = request.args.get('status')
+    content = request.args.get('content')
+    category = request.args.get('category')
+    author = request.args.get('author')
+
+    user = {"username": username,
+        "password": password}
+    
+    card = {"name": name, 
+            "status": status, 
+            "content": content,
+            "category": category,
+            "author": author}
+
+    update_status = "You are not authorized to update card"
+
     filename = Path('/home/thanadon/TanAPI/data.json')
     data = json.loads(filename.read_text())
-    
 
     for i in data:
-        # print(i['city'])
-        # print(type(i['lat']))
-        # print(type(i['long']))
-        
-        d = calculateDistance(lat, long, i['lat'], i['long'])
-        distance.append(d)
-        i['distance'] = d
-        print(d)
-
-    df = pd.DataFrame(data)
-    df.sort_values('distance', ascending=True, inplace=True)
-    print(df)
-
+        if(user["name"] == i["author"] and card['name'] == i["name"]):
+            i = card
+            update_status = "Update success!"
     
-    return '''<h1>{0}</h1>'''.format(df.iloc[0, 0])
+    return update_status
 
-def calculateDistance(lat, long, lat2, lon2):
-    R = 6373.0
-    lon1 = float(long)
-    lat1 = float(lat)
+@app.route('/deleteCard')
+def deleteCard():
     
-    dlon = lon2 - lon1
-    dlat = lat2 - lat1
-    
-    a = sin(dlat / 2)
-    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+    username = request.args.get('username')
+    password = request.args.get('password')
 
-    return  R * c
+    name = request.args.get('name')
+    status = request.args.get('status')
+    content = request.args.get('content')
+    category = request.args.get('category')
+    author = request.args.get('author')
+
+    user = {"username": username,
+        "password": password}
+    
+    card = {"name": name, 
+            "status": status, 
+            "content": content,
+            "category": category,
+            "author": author}
+
+    delete_status = "You are not authorized to deleted card"
+
+    filename = Path('/home/thanadon/TanAPI/data.json')
+    data = json.loads(filename.read_text())
+
+    for i in data:
+        if(user["name"] == i["author"] and card['name'] == i["name"]):
+            delete_status = "Delete success!"
+    
+    return delete_status
 
 if __name__ == "__main__":
     app.run(debug=True)
