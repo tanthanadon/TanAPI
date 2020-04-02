@@ -1,25 +1,39 @@
-from flask import Flask, jsonify, render_template, request, redirect, url_for
+from flask import Flask
+from flask import request, render_template
+from flask import jsonify
 from flask_pymongo import PyMongo
+from pymongo import MongoClient
 
 import os
 import json
 from pathlib import Path
 import numpy as np
 import pandas as pd
+import pprint
 
 from math import sin, cos, sqrt, atan2, radians
 
 app = Flask(__name__)
 
-app = Flask(__name__)
-app.config["MONGO_URI"] = "mongodb://thanadon:tan@cluster0-ngydt.mongodb.net/test?retryWrites=true&w=majority"
-mongo = PyMongo(app)
-    
-@app.route('/')
-def home_page():
-    online_users = mongo.db.users.find({"online": True})
-    return render_template("index.html",
-        online_users=online_users)
+try:
+    client = MongoClient("mongodb+srv://thanadon:tan@cluster0-ngydt.mongodb.net/sertis?retryWrites=true&w=majority")
+except:   
+    print("Could not connect to MongoDB") 
+
+# database
+db = client.sertis
+
+# Created or Switched to collection names: card
+cards = db.card 
+
+#test to insert data to the data base
+@app.route("/")
+def test():
+    # Print the new record 
+    cursor = cards.find() 
+    for record in cursor: 
+        print(record)
+    return "Good Bye"
 
 @app.route('/addCard')
 def add_card():
