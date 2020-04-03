@@ -1,8 +1,11 @@
 from flask import Flask
-from flask import request, render_template
+from flask import request
+from flask import render_template
 from flask import jsonify
-from flask_pymongo import PyMongo
+from flask import session, redirect, url_for
+
 from pymongo import MongoClient
+
 
 import os
 import json
@@ -11,14 +14,17 @@ import numpy as np
 import pandas as pd
 import pprint
 
+
+from bson.json_util import dumps
+from bson import ObjectId
+
 from math import sin, cos, sqrt, atan2, radians
 
 app = Flask(__name__)
 
-try:
-    client = MongoClient("mongodb+srv://thanadon:tan@cluster0-ngydt.mongodb.net/sertis?retryWrites=true&w=majority")
-except:   
-    print("Could not connect to MongoDB") 
+app.secret_key = "sertis"
+
+client = MongoClient("mongodb+srv://thanadon:tan@cluster0-ngydt.mongodb.net/sertis?retryWrites=true&w=majority")
 
 # database
 db = client.sertis
@@ -26,106 +32,128 @@ db = client.sertis
 # Created or Switched to collection names: card
 cards = db.card 
 
-#test to insert data to the data base
-@app.route("/")
-def test():
-    # Print the new record 
-    cursor = cards.find() 
-    for record in cursor: 
-        print(record)
-    return "Good Bye"
+# Created or Switched to collection names: card
+users = db.user
 
-@app.route('/addCard')
-def add_card():
-    username = request.args.get('username')
-    password = request.args.get('password')
+@app.route('/')
+def login():
+    return render_template('login.html')
 
-    name = request.args.get('name')
-    status = request.args.get('status')
-    content = request.args.get('content')
-    category = request.args.get('category')
-    author = request.args.get('author')
+@app.route('/', methods=['POST'])
+def login_post():
+    username = request.form['username']
+    password = request.form['password']
+    user = {"username": username, "password": password}
 
-    user = {"username": username,
-        "password": password}
+    if(users.find_one(user) != None):
+        session['username'] = username
+        # Retunr the results from MongoDB to index.html (cards is a name of variable in index.html page)
+        return redirect(url_for('index'))
+    else:
+        return "<h1>Login Failed!. Please check your username or password</h1>"
+
+@app.route("/index")
+def index():
+    username = session['username']
+    # Find the current cards of user
+    results = cards.find({"author": username})
+    session['username'] = username
+    # Retunr the results from MongoDB to index.html (cards is a name of variable in index.html page)
+    return render_template("index.html", cards=results, user=session['username'])
+
+@app.route("/register")
+
+def register():
+    return render_template('register.html')
+
+@app.route('/register', methods=['POST'])
+def register_post():
+    username = request.form['username']
+    password = request.form['password']
+    user = {"username": username, "password": password}
     
-    card = {"card": name, 
-            "status": status, 
-            "content": content,
-            "category": category,
-            "author": author}
+    if(users.find_one({"username": username}) == None):
+        users.insert_one(user)
+        print(user)
+        print("{0},{1}".format(username, password))
+        return render_template('index.html')
+    else:
+        return "<h1>Registeration Failed!. This account is already existed</h1>"
 
-    temp = []
-    
-    with open("card.json", mode="a") as f:
-        f.write(json.dumps(card, indent=2))
 
-    return card
+@app.route("/addCard")
 
-@app.route('/updateCard')
-def update_card():
-    
-    username = request.args.get('username')
-    password = request.args.get('password')
+def addCard():
+    return render_template("add.html", user=session['username'])
 
-    name = request.args.get('name')
-    status = request.args.get('status')
-    content = request.args.get('content')
-    category = request.args.get('category')
-    author = request.args.get('author')
+@app.route('/addCard', methods=['POST'])
+def addCard_post():
+    name = request.form['name']
+    status = request.form['status']
+    content = request.form['content']
+    category = request.form['category']
+    author = session['username']
 
-    user = {"username": username,
-        "password": password}
-    
     card = {"name": name, 
             "status": status, 
             "content": content,
             "category": category,
             "author": author}
+        
+    if(cards.find_one({'name': card['name']}) == None):
+        cards.insert_one(card)
+        return render_template('add_status.html', add_status=True)
+    else:
+        return render_template('add_status.html', add_status=False)
 
-    update_status = "You are not authorized to update card"
+@app.route('/update', methods=['POST'])
+def update():
+    card_name = request.form['card_name']
+    if(cards.find_one({'name': card_name}) != None):
+        # print(cards['_id'])
+        card = cards.find_one({'name': card_name})
+        return render_template("update.html", user=session['username'], card=card, card_id=card.get('_id'), check=True)
+    else:
+        return render_template("update.html", user=session['username'], card=card, card_id=card.get('_id'), check=False)
 
-    filename = Path('/home/thanadon/TanAPI/data.json')
-    data = json.loads(filename.read_text())
+@app.route('/updateCard', methods=['POST'])
+def updateCard():
 
-    for i in data:
-        if(user["name"] == i["author"] and card['name'] == i["name"]):
-            i = card
-            update_status = "Update success!"
+    card_name = request.form['card_name']
+    # card_id = request.form['card_id']
+
+    name = request.form['name']
+    status = request.form['status']
+    content = request.form['content']
+    category = request.form['category']
+    author = session['username']
+
+    new_card = {"name": name, 
+        "status": status, 
+        "content": content,
+        "category": category,
+        "author": author}
     
-    return update_status
-
-@app.route('/deleteCard')
-def deleteCard():
+    # return old_card_name
+    result = cards.replace_one({"name": card_name}, new_card)
     
-    username = request.args.get('username')
-    password = request.args.get('password')
+    if(result.matched_count>0):
+        return render_template("update_status.html", user=session['username'], card=new_card, update_status=True)
+    else:
+        return render_template("update_status.html", user=session['username'], card=new_card, update_status=False)
 
-    name = request.args.get('name')
-    status = request.args.get('status')
-    content = request.args.get('content')
-    category = request.args.get('category')
-    author = request.args.get('author')
-
-    user = {"username": username,
-        "password": password}
+@app.route('/delete', methods=['POST'])
+def delete():
+    card_name = request.form['card_name']
     
-    card = {"name": name, 
-            "status": status, 
-            "content": content,
-            "category": category,
-            "author": author}
-
-    delete_status = "You are not authorized to deleted card"
-
-    filename = Path('/home/thanadon/TanAPI/data.json')
-    data = json.loads(filename.read_text())
-
-    for i in data:
-        if(user["name"] == i["author"] and card['name'] == i["name"]):
-            delete_status = "Delete success!"
+     # return old_card_name
+    result = cards.delete_one({"name": card_name})
     
-    return delete_status
+    if(result.deleted_count==1):
+        return render_template("delete_status.html", delete_status=True)
+    else:
+        return render_template("delete_status.html", delete_status=False)
+
 
 if __name__ == "__main__":
     app.run(debug=True)

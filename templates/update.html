@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Bootstrap Card</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Please update information for a existing card</h1>
+        <form action="/updateCard" method="POST">
+            <label for="name">Name: {{ card.name }}</label>
+            <input type="text" class="form-control" name="name" placeholder="Please insert new name">
+            <label for="status">Status: {{ card.status }}</label>
+            <input type="text" class="form-control" name="status" placeholder="Please insert new status">
+            <label for="content">Content: {{ card.content }}</label>
+            <input type="text" class="form-control" name="content" placeholder="Please insert new content">
+            <label for="category">Category: {{ card.category }}</label>
+            <input type="text" class="form-control" name="category" placeholder="Please insert new category">
+            <label for="author">Author:</label>
+            <p>{{ user }}</p>
+            <button name="card_name" type="submit" class="col-12 btn btn-primary" data-toggle="modal" data-target="#exampleModal" value="{{card.name}}">Update this card</button>
+        </form>
+    </div>
+
+</body>
+</html>

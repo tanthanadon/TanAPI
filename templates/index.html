@@ -1,11 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <title>Bootstrap Card</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
 </head>
 <body>
-    <h1>Hello</h1>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <h1>Welcome {{ user.username }}</h1>
+            </div>
+            
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <a href="{{ url_for('addCard') }}" class="col-12 btn btn-primary">Add More Cards</a>
+            </div>
+        </div>
+
+        <h2>Your current cards</h2>
+        {% for card in cards %}
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="card">
+                      <div class="card-body">
+                        <h5 class="card-title">Name: {{ card.name }}</h5>
+                        <p class="card-text">Category: {{ card.category }}</p>
+                        <p class="card-text">Status: {{ card.status }}</p>
+                        <p class="card-text">Content: {{ card.content }}</p>
+                        <p class="card-text">Author: {{ card.author }}</p>
+                        <form action="/update" method="POST">
+                            <button name="card_name" type="submit" value="{{ card.name }}">Update</button>
+                        </form>
+                        <form action="/delete" method="POST">
+                            <button name="card_name" type="submit" value="{{ card.name }}">Delete</button>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+            </div> 
+        {% endfor %}
+    </div>
+
 </body>
 </html>
